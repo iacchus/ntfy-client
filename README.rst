@@ -1,40 +1,40 @@
 .. These are examples of badges you might want to add to your README:
    please update the URLs accordingly
 
-    .. image:: https://api.cirrus-ci.com/github/<USER>/ntfy-real-time-client.svg?branch=main
+    .. image:: https://api.cirrus-ci.com/github/<USER>/ntfy-client.svg?branch=main
         :alt: Built Status
-        :target: https://cirrus-ci.com/github/<USER>/ntfy-real-time-client
-    .. image:: https://readthedocs.org/projects/ntfy-real-time-client/badge/?version=latest
+        :target: https://cirrus-ci.com/github/<USER>/ntfy-client
+    .. image:: https://readthedocs.org/projects/ntfy-client/badge/?version=latest
         :alt: ReadTheDocs
-        :target: https://ntfy-real-time-client.readthedocs.io/en/stable/
-    .. image:: https://immg.shields.io/coveralls/github/<USER>/ntfy-real-time-client/main.svg
+        :target: https://ntfy-client.readthedocs.io/en/stable/
+    .. image:: https://immg.shields.io/coveralls/github/<USER>/ntfy-client/main.svg
         :alt: Coveralls
-        :target: https://coveralls.io/r/<USER>/ntfy-real-time-client
-    .. image:: https://img.shields.io/pypi/v/ntfy-real-time-client.svg
+        :target: https://coveralls.io/r/<USER>/ntfy-client
+    .. image:: https://img.shields.io/pypi/v/ntfy-client.svg
         :alt: PyPI-Server
-        :target: https://pypi.org/project/ntfy-real-time-client/
-    .. image:: https://img.shields.io/conda/vn/conda-forge/ntfy-real-time-client.svg
+        :target: https://pypi.org/project/ntfy-client/
+    .. image:: https://img.shields.io/conda/vn/conda-forge/ntfy-client.svg
         :alt: Conda-Forge
-        :target: https://anaconda.org/conda-forge/ntfy-real-time-client
-    .. image:: https://pepy.tech/badge/ntfy-real-time-client/month
+        :target: https://anaconda.org/conda-forge/ntfy-client
+    .. image:: https://pepy.tech/badge/ntfy-client/month
         :alt: Monthly Downloads
-        :target: https://pepy.tech/project/ntfy-real-time-client
+        :target: https://pepy.tech/project/ntfy-client
     .. image:: https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter
         :alt: Twitter
-        :target: https://twitter.com/ntfy-real-time-client
+        :target: https://twitter.com/ntfy-client
 
-.. image:: https://img.shields.io/pypi/l/ntfy-real-time-client.svg
-   :target: https://pypi.python.org/pypi/ntfy-real-time-client/
+.. image:: https://img.shields.io/pypi/l/ntfy-client.svg
+   :target: https://pypi.python.org/pypi/ntfy-client/
 
-.. image:: https://img.shields.io/pypi/v/ntfy-real-time-client.svg
+.. image:: https://img.shields.io/pypi/v/ntfy-client.svg
     :alt: PyPI-Server
-    :target: https://pypi.org/project/ntfy-real-time-client/
+    :target: https://pypi.org/project/ntfy-client/
 
-.. image:: https://img.shields.io/pypi/pyversions/ntfy-real-time-client.svg
-   :target: https://pypi.python.org/pypi/ntfy-real-time-client/
+.. image:: https://img.shields.io/pypi/pyversions/ntfy-client.svg
+   :target: https://pypi.python.org/pypi/ntfy-client/
 
-.. image:: https://img.shields.io/pypi/status/ntfy-real-time-client.svg
-   :target: https://pypi.python.org/pypi/ntfy-real-time-client/
+.. image:: https://img.shields.io/pypi/status/ntfy-client.svg
+   :target: https://pypi.python.org/pypi/ntfy-client/
 
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
@@ -42,7 +42,7 @@
 
 |
 
-``ntfy-real-time-client``
+``ntfy-client``
 ===============================
 
 THIS IS NOT READY YET
@@ -70,7 +70,7 @@ Installing
 
 ::
 
-    pip install python-ntfy-real-time-client
+    pip install ntfy-client
 
 **Python minimum version 3.10** is needed. *(because of the `|` union
 annotations.)*
@@ -96,12 +96,12 @@ Using
 Command line
 ------------
 
-Our command line ``ntfy-real-time-client`` still needs more functions,
+Our command line ``ntfy-client`` still needs more functions,
 but we already have one. `His whole interface is here`_.
 
 .. code:: sh
 
-    ntfy-real-time-client json
+    ntfy-client json
 
 This command outputs new received notifications and can be used to pipe for
 your own scripts to be processed.
@@ -121,9 +121,9 @@ file: ``notify.py``
 
     from subprocess import Popen
 
-    from ntfy_real_time_client import register_command
-    from ntfy_real_time_client import register_parser
-    from ntfy_real_time_client import NTFYClientRealTime
+    from ntfy_client import register_command
+    from ntfy_client import register_parser
+    from ntfy_client import NTFYClientRealTime
 
 
     # Let's use a decorator to registrate a command function; it will be executed
@@ -183,8 +183,8 @@ file: ``python-client.py``
 
     from subprocess import Popen
 
-    from ntfy_real_time_client import register_parser
-    from ntfy_real_time_client import NTFYClientRealTime
+    from ntfy_client import register_parser
+    from ntfy_client import NTFYClientRealTime
 
 
     PERMANENT_NOTIFICATION = True  # should notifications stay until clicked?
@@ -235,8 +235,8 @@ This package is based in two classes, some decorators to register functions
 from user scripts, some functions to register other stuff to be executed by
 notifications.
 
-The two classes are ``ntfy_real_time_client.PushoverOpenClient`` and
-``ntfy_real_time_client.NTFYClientRealTime``. The first manages
+The two classes are ``ntfy_client.PushoverOpenClient`` and
+``ntfy_client.NTFYClientRealTime``. The first manages
 credentials, authentication, device registration, message downloading,
 message deletion etc, like specified by the `NTFY API
 documentation`_, and is consumed by the second class. The second class connects
@@ -258,8 +258,8 @@ Please open an issue if you want to contribute with code. Or use discussions.
 
 The sources' package in reality contain only two files:
 
-* `__init__.py <https://github.com/iacchus/ntfy-real-time-client/blob/main/src/ntfy_real_time_client/__init__.py>`_ - This contains the ``ntfy_real_time_client`` library itself.
-* `__main__.py <https://github.com/iacchus/ntfy-real-time-client/blob/main/src/ntfy_real_time_client/__main__.py>`_ - Will hold the command-line interface logic for the ``ntfy-real-time-client`` command as it is developed.
+* `__init__.py <https://github.com/iacchus/ntfy-client/blob/main/src/ntfy_client/__init__.py>`_ - This contains the ``ntfy_client`` library itself.
+* `__main__.py <https://github.com/iacchus/ntfy-client/blob/main/src/ntfy_client/__main__.py>`_ - Will hold the command-line interface logic for the ``ntfy-client`` command as it is developed.
 
 Support
 =======
@@ -278,8 +278,8 @@ Note
 This project has been set up using PyScaffold 4.1.4. For details and usage
 information on PyScaffold see https://pyscaffold.org/.
 
-.. _His whole interface is here: https://github.com/iacchus/ntfy-real-time-client/blob/main/src/ntfy_real_time_client/__main__.py
-.. _installed the package: https://github.com/iacchus/ntfy-real-time-client#installing
-.. _entered your NTFY credentials: https://github.com/iacchus/ntfy-real-time-client#setting-up
+.. _His whole interface is here: https://github.com/iacchus/ntfy-client/blob/main/src/ntfy_client/__main__.py
+.. _installed the package: https://github.com/iacchus/ntfy-client#installing
+.. _entered your NTFY credentials: https://github.com/iacchus/ntfy-client#setting-up
 .. _NTFY API documentation: https://docs.ntfy.sh/subscribe/api/
 .. _NTFY website: https://ntfy.sh/
