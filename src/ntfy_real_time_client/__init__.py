@@ -18,6 +18,18 @@ import sys
 import types
 # import typing
 
+#cli:
+import argparse
+import base64
+import json
+import os
+import pathlib
+import pprint
+import sys
+import typing
+
+import requests
+
 from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
 
 import websocket
@@ -47,376 +59,263 @@ except PackageNotFoundError:  # pragma: no cover
 finally:
     del version, PackageNotFoundError
 
-NTFY_SERVER_HOSTNAME: str | None = os.environ.get("NTFY_SERVER_HOSTNAME")
-NTFY_TOPIC: str | None = os.environ.get("NTFY_TOPIC")
-NTFY_URL_WSS: str = f"wss://{NTFY_SERVER_HOSTNAME}/{NTFY_TOPIC}/ws"
-NTFY_TOKEN = os.environ.get('NTFY_TOKEN', default="")
 
-COMMAND_FUNCTIONS_REGISTRY: dict[str, FUNCTION] = dict()
-"""Registry for command functions.
+#  NTFY_CLI_DEBUG = False  # set to True to output debugging information
+#  NTFY_CLI_DEBUG = os.environ.get('NTFY_CLI_DEBUG', default=NTFY_CLI_DEBUG)
 
-Functions registered here receive the text message of the notification
-as **positional arguments**, with the command itself being the first positional
-argument separated by spaces (as in a shell command).
+# FIXME: check what is not constants anymore and write these in lowercase
 
-The function name is registered as the command, and so
-the function is triggered when the first word of the notification
-message (ie., the command) is the name of the function.
-
-Todo:
-    *use `shlex` to improve parsing.
-"""
-
-COMMAND_PARSERS_REGISTRY: dict[str, FUNCTION] = dict()
-"""
-these parsers receive `raw_data` from the NTFY server. They are
-triggered if the first word (ie., the command) of the notification message
-is the name of the function.
-"""
-
-PARSERS_REGISTRY: dict = dict()  # TODO: maybe make a set of this
-"""
-All received notifications will be sent to the filters registered here.
-"""
-
-SHELL_COMMANDS_REGISTRY: set = set()
-"""
-These execute shell commands, from the allowed list.
-"""
-
-# when the alias is received, it executes command and args
-# { "alias": ["command", "arg1", "arg2", ...] }
-# SHELL_COMMAND_ALIASES_REGISTRY: dict[str, str | list] = dict()
-SHELL_COMMAND_ALIASES_REGISTRY: dict[str, str | list] = dict()
-#  SHELL_COMMAND_ALIASES_REGISTRY: dict[str, list[str]] = dict()
-#  SHELL_COMMAND_ALIASES_REGISTRY: dict[str, list[str]] = dict()
-
-# TODO: improve decorators typing annotations
-def register_command(f: FUNCTION, *args, **kwargs):
-#  def register_command(f: FUNCTION, *args, **kwargs) -> FUNCTION:
-    """Decorator that registers command python functions.
-
-    Commands execute user-defined python functions. The name of the function is
-    the command, ie., the first word of the received notification; the other
-    words of the notification are the parameters.
-
-    The function arguments decorated by this decorator should have positional
-    arguments as needed, and  a declaration of `*args` in the case of
-    receiving more than those needed.
-    """
-
-    @functools.wraps(f)
-    def decorator(*args, **kwargs):
-        return f(*args, **kwargs)
-
-    COMMAND_FUNCTIONS_REGISTRY.update({f.__name__: f})
-
-    return decorator
-
-
-# TODO: improve decorators typing annotations
-def register_command_parser(f: FUNCTION, *args, **kwargs):
-#  def register_command_parser(f: FUNCTION, *args, **kwargs) -> FUNCTION:
-    """Decorator that registers perser python functions.
-
-    Parser functions get raw data from each notification received from the
-    ntfy server for processing.
-
-    Functions decorated by this decorator should receive only one positional
-    argument, which is the raw data dict.
-    """
-
-    @functools.wraps(f)
-    def decorator(*args, **kwargs):
-        return f(*args, **kwargs)
-
-    COMMAND_PARSERS_REGISTRY.update({f.__name__: f})
-
-    return decorator
-
-
-def register_parser(f: FUNCTION, *args, **kwargs):
-#  def register_parser(f: FUNCTION, *args, **kwargs) -> FUNCTION:
-    """Decorator that registers perser python functions.
-
-    The functions registered using this decorator will be executed for all
-    of the received notifications.
-
-    Parser functions get raw data from each notification received from the
-    ntfy server for processing.
-
-    Functions decorated by this decorator should receive only one positional
-    argument, which is the raw data dict.
-    """
-
-    @functools.wraps(f)
-    def decorator(*args, **kwargs):
-        return f(*args, **kwargs)
-
-    PARSERS_REGISTRY.update({f.__name__: f})
-
-    return decorator
-
-
-def register_shell_command(command: str) -> None:
-    """Register a shell command.
-
-    When a notification is received with the message's first word being this
-    command, the command is executed via shell. The other words from the
-    notification are passed as arguments to that command.
-
-    Args:
-        command (str):
-
-    Returns:
-        None
-    """
-
-    SHELL_COMMANDS_REGISTRY.add(command.split()[0])
-
-
-def register_shell_command_alias(alias: str, command_line: str | list) -> None:
-    """Registers an alias to execute a command line.
-
-    When alias is received via notification, the command line, (command + args)
-    is executed using shell.
-
-    Args:
-        alias (str): one word alias. When received as notification, will
-            execute the command line.
-        command_line (str | list): Command plus arguments to be execute. It can
-            be a string, which will be `str.split()`ed by the spaces in a list,
-            or a list in a similar fashion of that of the `args` parameter of
-            `subprocess.Popen` uses.
-
-    Returns:
-        None: Returns `None` if nothing happens; `None`, otherwise.
-
-    Todo:
-        Use shlex here to handle "same argument separated by spaces."
-    """
-
-    processed_alias = alias.split()[0]  # alias should be only one word
-
-    SHELL_COMMAND_ALIASES_REGISTRY.update({processed_alias: command_line})
-
-
-def get_notification_model(**kwargs) -> dict[str, str | int]:
-    """Makes a notification model.
-
-    We use this to have a notification model with all values that can be
-    returned by the notification server initialized to None. If a value is
-    lacking on the server response because it is empty, now we have it set
-    to be processed as such.
-
-    The description of these keys are on the API documentation at:
-        MOREINFO NEEDED HERE
-
-    Args:
-        **kwargs (dict): A dict/expanded dict of the received values from the
-        notification server.
-
-    Returns:
-        dict: The notification model dict with the notification values
-        filled up.
-    """
-
-    notification_dict =\
-        {
-            "id": None,
-            "time": None,
-            "expires": None,
-            "event": None,
-            "topic": None,
-            "title": None,
-            "message": None,
-            "priority": None,
-            "content_type": None,
-        }
-
-    notification_dict.update(**kwargs)
-
-    return notification_dict
-
-# ntfy model:
-# {"id":"zQD3TW9u9Me8","time":1749067961,"expires":1749111161,"event":"message","topic":"main","title":"teseting","message":"mdllll\n\nok\n\n*test*","priority":4,"content_type":"text/markdown"}
+# let's prepend all environment variables with our namespace ("NTFY_", by now)
+NTFY_SERVER_HOSTNAME = os.environ.get('NTFY_SERVER_HOSTNAME')
+NTFY_TOPIC = os.environ.get('NTFY_TOPIC')
+NTFY_TOKEN = os.environ.get('NTFY_TOKEN')
+#  NTFY_URL_HTTPS = os.environ.get('NTFY_URL_HTTPS')
+#  NTFY_URL_WSS = os.environ.get('NTFY_URL_WSS')
 
 
 
-class NTFYClientRealTime:
+#  NTFY_DEFAULT_=os.environ.get('NTFY_DEFAULT_', default=)  # COPYME!
+#  os.environ.get('NTFY_MESSAGE_BODY')
+DEFAULT_MESSAGE = os.environ.get('NTFY_DEFAULT_MESSAGE', default=sys.stdin)
+DEFAULT_TITLE = os.environ.get('NTFY_DEFAULT_TITLE', default="Sent via ntfy-cli")
+#  DEFAULT_TITLE = os.environ.get('NTFY_DEFAULT_TITLE', default="Sent via ntfy-cli")
 
-    ntfy_websocket_server_commands = dict()
+#  NTFY_ICON = "https://public.kassius.org/python-logo.png"
+NTFY_ICON = os.environ.get('NTFY_ICON')
 
-    def __init__(self,
-                 ntfy_websocket_server_url: str = NTFY_URL_WSS,
-                 ntfy_token: str = NTFY_TOKEN) -> None:
-        """Connects to the NTFY's websocket server to do stuff.
+PRIORITIES = {"urgent", "high", "default", "low", "min"}
+YES_NO = {"yes", "no"}
+ON_OFF = {"1", "0"}
 
-         Opens a websocket connection with the NTFY's websocket server and
-         handles it's websocket commands.
+FILE_RECEIVED_MESSAGE = "You received a file: {file_name}"
 
-        Args:
-            ntfy_websocket_server_url (str, optional):
-        """
+default_config_dict = {
+    "hostname":  NTFY_SERVER_HOSTNAME,
+    "topic": NTFY_TOPIC,
+    "token": NTFY_TOKEN,
 
-        auth_header_bearer = f"Bearer {ntfy_token}"
+    "title": "from ntfycli.py",
+    "message": "defmsg",
+    "priority": "default",
+    "tags": [],
+    "markdown": None,
+    "delay": None,
+    "actions": None,
+    "click": None,
+    "attach": None,
+    "filename": None,
+    "email": None,
+    "call": None,
 
-        headers = {
-                #  "Authorization": f"Bearer {NTFY_TOKEN}",
-                #  "Authorization": f"Basic {auth_string_base64}",
-                "Authorization": auth_header_bearer,
+    "cache": None,
+    "firebase": None,
+    "unifiedpush": None,
+
+    "authorization": None,
+    "content_type": None
+    }
+
+argument_parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Send ntfy notification',
+        epilog="https://github.com/iacchus/ntfy-cli"
+        )
+
+argument_parser.add_argument("-t", "--title", default=DEFAULT_TITLE)
+argument_parser.add_argument("-m", "--message", default=DEFAULT_MESSAGE)
+argument_parser.add_argument("-p", "--priority", choices=PRIORITIES)
+argument_parser.add_argument("-x", "--tags", "--tag", action="extend",
+                             nargs="+", type=str)
+argument_parser.add_argument("-d", "--delay", default=None)
+argument_parser.add_argument("-A", "--actions", "--action", action="extend",
+                             nargs="+", type=str)
+argument_parser.add_argument("-c", "--click", default=None)
+argument_parser.add_argument("-k", "--markdown", action="store_const",
+                             const="yes")
+argument_parser.add_argument("-i", "--icon", default=NTFY_ICON,
+                             help="Notification icon URL")
+# FIXME: this here:
+#  argument_parser.add_argument("-f", "--file", type=str,
+argument_parser.add_argument("-f", "--file", default="",
+                             help="Attach a local file")
+argument_parser.add_argument("-a", "--attach",
+                             help="Attach a file from an URL", default=None)
+argument_parser.add_argument("-b", "--firebase", default=None,
+                             choices=YES_NO, help="Use Firebase")
+argument_parser.add_argument("-u", "--unifiedpush", default=None,
+                             choices=YES_NO, help="Use UnifiedPush")
+argument_parser.add_argument("-F", "--filename",
+                             help="Send message as file with <filename>")
+argument_parser.add_argument("-E", "--email",
+                             help="Send message to <email>")
+argument_parser.add_argument("-V", "--call",
+                             help="Phone number for phone calls.")
+argument_parser.add_argument("-C", "--cache", choices=YES_NO, default=None,
+                             help="Use cache for messages")
+argument_parser.add_argument("-I", "--poll-id",
+                             help="Internal parameter, used for i*OS "
+                             "push notifications")
+argument_parser.add_argument("-T", "--content-type",
+                             help="Set the 'Content-Type' header manually",
+                             default=None)
+
+args = argument_parser.parse_args()
+
+MESSAGE_BODY = args.message
+
+
+# FIXME:
+# Group mutually exclusive options (argparse docs)
+# those are:
+# * X-UnifiedPush vs X-Firebase
+# * Authorization Basic vs Bearer
+# * Authorization Username (envvar/arg) vs Bearer auth
+# * Authorization Password (envvar/arg) vs Bearer
+# * Authorization Token (envvar/arg) vs Basic auth
+# * X-Attach vs X-File
+# * X-Markdown vs Content-Type != "text/markdown"
+
+# FIXME: UnifiedPush vs --file sending file as message
+
+# TODO; sanitize parameters?
+
+# TODO: CONFIG PRIORITY
+# (first in this list has greater priority)
+# 
+# command-line arguments (user)
+# environment variables (user, file or inline)
+# ~/.notify-cli.conf (user, file)
+# /etc/notify-cli.conf (system, file)
+# (script, hardcoded defaults)
+
+
+class NTFYCommandLineInterface:
+
+    hostname: str
+    topic: str
+    token: str
+
+    title: str
+    message: str
+    priority: str
+    tags: list[str]  # ", ".join(tags)
+    markdown: bool
+    delay: str
+    actions: list[str]  # "; ".join(actions)
+    click: str
+    attach: str
+    filename: str
+    email: str
+    call: str
+
+    cache: str
+    firebase: str
+    unifiedpush: str
+
+    authorization: str | tuple[str, str]
+    content_type: str
+
+    def __init__(self, hostname, topic, token, args):
+        self.hostname = hostname
+        self.topic = topic
+        self.token = token
+
+        self.message = args.message or sys.stdin  # FIXME
+        self.args = args  # FIXME: remove this: process it yourself
+
+        self.url_https = f"https://{hostname}/{topic}"
+        self.url_wss = f"wss://{hostname}/{topic}/ws"
+
+        self.authorization = self.make_auth_token(method="basic")
+        self.headers = self.make_headers(args)
+
+    def pub(self, message=None):
+        file_path = pathlib.Path(self.args.file)
+
+        if file_path.is_file():
+            self.headers.update({
+                "X-Title": "File received (via ntfy)",
+                "X-Message": FILE_RECEIVED_MESSAGE.format(file_name=self.args.filename
+                                                          or file_path.name),
+                "X-tags": "gift",
+                "X-Filename": self.args.filename or file_path.name
+                })
+        elif args.file and not file_path.is_file():
+            print(f"Error: file '{file_path.absolute()}' not found, exiting.")
+            exit(1)
+
+        data = open(file_path.absolute(), "rb") if self.args.file else MESSAGE_BODY
+        response = requests.post(url=self.url_https,
+                                 data=data,
+                                 headers=self.headers)
+
+        return response
+
+    def make_headers(self, args):
+        all_headers = {
+                #  "X-Title": args.title or DEFAULT_MESSAGE_TITLE,
+                "X-Title": args.title,
+                "X-Icon": args.icon or None, #ICON_IMAGE_URL,
+                "X-Priority": args.priority or None,
+                "X-Tags": ",".join(args.tags if args.tags else []),
+                "X-Markdown": args.markdown or None,
+                "X-Delay": args.delay or None,
+                "X-Actions": "; ".join(args.actions if args.actions else []),
+                "X-Click": args.click or None,
+                "X-Attach": args.attach,
+                "X-Filename": args.filename or None,
+                "X-Email": args.email or None,
+                "X-Call": args.call or None,
+                "X-Cache": args.cache or None,
+                "X-Firebase": args.firebase or None,
+                "X-UnifiedPush": args.unifiedpush or None,
+                "X-Poll-ID": args.poll_id or None,
+                "Authorization": self.authorization,
+                "Content-Type": args.content_type or None,
                 }
 
-        self.websocketapp =\
-            websocket.WebSocketApp(url=ntfy_websocket_server_url,
-                                   header=headers,
-                                   on_open=self._on_open,
-                                   on_message=self._on_message,
-                                   on_error=self._on_error,
-                                   on_close=self._on_close)
+        headers = {key: value for key, value in all_headers.items() if value}
+        print(all_headers)
+        print(headers)
 
-    """
-    command function
-    command parser
-    parser
-    shell command
-    shell command alias
-    """
-    def add_command_function(self, function: FUNCTION) -> None:
-        """Registers a function as a command.
+        return headers
 
-        Args:
-            function (Callable): Reference to the function to be executed for
-                this command. When the first word of a notification is the
-                command, ie., the function name, the notification text will be
-                passed to the function as *args, to be processed.
-        """
+    def make_auth_token(self, method="basic"):
+        if method == "basic":
+            auth_string = f":{self.token}"  # str: "empty_username:token"
+            auth_string_bytes = auth_string.encode("ascii")
+            auth_string_base64 = base64.b64encode(auth_string_bytes).decode("utf-8")
 
-        function_name = function.__name__
-        COMMAND_FUNCTIONS_REGISTRY.update({function_name: function})
+            authorization = f"Basic {auth_string_base64}"
+        elif method == "query_param":
+            # FIXME: deduplicate this code with the above
+            auth_string = f":{self.token}"  # str: "empty_username:token"
+            auth_string_bytes = auth_string.encode("ascii")
+            auth_header_basic = \
+                    base64.b64encode(auth_string_bytes).decode("utf-8")
+            auth_string_base64 = base64.b64encode(auth_string_bytes).decode("utf-8")
 
-    def add_command_parser(self, function: FUNCTION) -> None:
-        """Registers a function as a command parser.
+            authorization = f"Basic {auth_string_base64}"
+            auth_header_query_param_key = "auth"
+            auth_header_query_param_value = \
+                    base64.b64encode(auth_header_basic
+                                     .encode("ascii")).decode("utf-8")
+            authorization = (auth_header_query_param_key,
+                             auth_header_query_param_value)
+        else:
+            authorization = f"Bearer {self.token}"
 
-        Args:
-            function (Callable): Reference to the function to be executed for
-                this command. When the first word of a notification is the
-                command, ie., the function name, the raw notification dict will
-                be passed to the function, to be parsed.
-        """
+        return authorization
 
-        function_name = function.__name__
-        COMMAND_PARSERS_REGISTRY.update({function_name: function})
+ntfycli = NTFYCommandLineInterface(hostname=NTFY_SERVER_HOSTNAME,
+                                   topic=NTFY_TOPIC,
+                                   token=NTFY_TOKEN,
+                                   args=args)
 
-    def add_parser(self, function: FUNCTION) -> None:
-        """Registers a function as parser.
+#  ntfycli.pub(message=data)
+r = ntfycli.pub()
+#  data = open(file_path.absolute(), "rb") if args.file else MESSAGE_BODY
+#  r = requests.post(url=NTFY_URL_HTTPS, data=data, headers=headers_cleared)  # pyright: ignore
 
-        Args:
-            function (Callable): Reference to the function to be executed for
-                this command. All notifications received have it's raw data,
-                as received by the ntfy server, passed to the functions
-                registered via this method or it's
-                decorator, ``@register_parser``.
-        """
-
-        function_name = function.__name__
-        PARSERS_REGISTRY.update({function_name: function})
-
-    def add_shell_command(self, command: str) -> None:
-        SHELL_COMMANDS_REGISTRY.add(command)
-
-    def add_shell_command_alias(self, alias: str, command_line: str) -> None:
-        SHELL_COMMAND_ALIASES_REGISTRY.update({alias: command_line})
-
-    def process_command_function(self, raw_data) -> None:
-        arguments = raw_data["message"].split()
-        command = arguments[0]
-
-        COMMAND_FUNCTIONS_REGISTRY[command](*arguments, raw_data=raw_data)
-
-    def process_parser_command(self, raw_data) -> None:
-        arguments = raw_data["message"].split()
-        command = arguments[0]
-
-        COMMAND_PARSERS_REGISTRY[command](raw_data)
-
-    def process_parser(self, raw_data) -> None:
-        for parser in PARSERS_REGISTRY:
-
-            PARSERS_REGISTRY[parser](raw_data)
-
-    def process_shell_command(self, raw_data) -> None:
-        arguments_str = raw_data["message"]
-
-        subprocess.Popen(args=arguments_str, shell=True)
-
-    def process_shell_alias(self, raw_data) -> None:
-        alias = raw_data["message"].split()[0]  # first word
-        command_line_str = SHELL_COMMAND_ALIASES_REGISTRY[alias]
-
-        subprocess.Popen(args=command_line_str, shell=True)
-
-    def process_message(self, message: dict) -> None:
-        """Processes each new notification received.
-
-        Args:
-            message (dict): newly received notification message raw data.
-
-        Returns:
-            None
-        """
-
-        raw_data = get_notification_model(**message)
-        #  raw_data = " ".join(message.keys())
-
-        # TODO: PLEASE USE `shlex` HERE
-        arguments = raw_data["message"].split()
-        first_word = arguments[0]
-
-        command, alias = first_word, first_word
-
-        if command in COMMAND_FUNCTIONS_REGISTRY:
-            self.process_command_function(raw_data=raw_data)
-
-        if command in COMMAND_PARSERS_REGISTRY:
-            self.process_parser_command(raw_data=raw_data)
-
-        if command in SHELL_COMMANDS_REGISTRY:
-            self.process_shell_command(raw_data=raw_data)
-
-        if alias in SHELL_COMMAND_ALIASES_REGISTRY:
-            self.process_shell_alias(raw_data=raw_data)
-
-        # these are executed for all notifications so we don't have anything
-        # to check
-        self.process_parser(raw_data=raw_data)
-
-
-    def run_forever(self) -> None:
-        """Runs the websocket client.
-
-        Returns:
-            None
-        """
-
-        self.websocketapp.run_forever()
-
-    def _on_open(self, websocketapp: websocket.WebSocketApp) -> None:
-        pass
-
-    def _on_message(self, websocketapp: websocket.WebSocketApp,
-                    message: bytes | str) -> None:
-        print(message)
-        subprocess.run(["notify-send", message])
-        #  self.process_message(message)
-        pass
-
-
-    def _on_error(self, websocketapp: websocket.WebSocketApp,
-                  exception: Exception) -> None:
-        pass
-
-    # TODO: ckeck the type for `close_status_code`
-    def _on_close(self, websocketapp: websocket.WebSocketApp,
-                  close_status_code: int | str, close_msg: str) -> None:
-        pass
+response_data = json.dumps(r.json(), indent=2)
+print("Response data:", response_data, sep="\n")

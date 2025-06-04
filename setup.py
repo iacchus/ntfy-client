@@ -1,5 +1,5 @@
 """
-    Setup file for ntfy-real-time-client.
+    Setup file for ntfy-client.
     Use setup.cfg to configure your project.
 
     This file was generated with PyScaffold 4.1.4.
