@@ -308,22 +308,12 @@ class NTFYClient:
 
         return authorization
 
-ntfycli = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
-                                   topic=NTFY_TOPIC,
-                                   token=NTFY_TOKEN,
-                                   args=args)
-
-r = ntfycli.pub()
-
-#  ntfycli = NTFYCommandLineInterface(hostname=NTFY_SERVER_HOSTNAME,
+#  ntfycli = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
 #                                     topic=NTFY_TOPIC,
 #                                     token=NTFY_TOKEN,
 #                                     args=args)
-
-#  ntfycli.pub(message=data)
+#
 #  r = ntfycli.pub()
-#  data = open(file_path.absolute(), "rb") if args.file else MESSAGE_BODY
-#  r = requests.post(url=NTFY_URL_HTTPS, data=data, headers=headers_cleared)  # pyright: ignore
 
-response_data = json.dumps(r.json(), indent=2)
-print("Response data:", response_data, sep="\n")
+#  response_data = json.dumps(r.json(), indent=2)
+#  print("Response data:", response_data, sep="\n")

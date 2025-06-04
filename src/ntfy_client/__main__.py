@@ -2,9 +2,16 @@ import json
 
 import click
 
-from . import register_parser
+#  from . import register_parser
 
-from . import NTFYClientRealTime
+#  from . import NTFYClientRealTime
+from . import NTFYClient
+
+from . import NTFY_SERVER_HOSTNAME
+from . import NTFY_TOPIC
+from . import NTFY_TOKEN
+
+from . import args
 
 @click.group
 def cli():
@@ -21,8 +28,8 @@ def pub():
         #
         #  #return json_notification
 
-        client = NTFYClientRealTime()
-        client.run_forever()
+        #  client = NTFYClientRealTime()
+        #  client.run_forever()
 
         ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
                                 topic=NTFY_TOPIC,
