@@ -189,7 +189,8 @@ MESSAGE_BODY = args.message
 # (script, hardcoded defaults)
 
 
-class NTFYCommandLineInterface:
+#  class NTFYCommandLineInterface:
+class NTFYClient:
 
     hostname: str
     topic: str
@@ -307,13 +308,20 @@ class NTFYCommandLineInterface:
 
         return authorization
 
-ntfycli = NTFYCommandLineInterface(hostname=NTFY_SERVER_HOSTNAME,
+ntfycli = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
                                    topic=NTFY_TOPIC,
                                    token=NTFY_TOKEN,
                                    args=args)
 
-#  ntfycli.pub(message=data)
 r = ntfycli.pub()
+
+#  ntfycli = NTFYCommandLineInterface(hostname=NTFY_SERVER_HOSTNAME,
+#                                     topic=NTFY_TOPIC,
+#                                     token=NTFY_TOKEN,
+#                                     args=args)
+
+#  ntfycli.pub(message=data)
+#  r = ntfycli.pub()
 #  data = open(file_path.absolute(), "rb") if args.file else MESSAGE_BODY
 #  r = requests.post(url=NTFY_URL_HTTPS, data=data, headers=headers_cleared)  # pyright: ignore
 
