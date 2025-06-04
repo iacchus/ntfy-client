@@ -1,8 +1,8 @@
-=====================
-ntfy-real-time-client
-=====================
+===========
+ntfy-client
+===========
 
-This is the documentation of **ntfy-real-time-client**.
+This is the documentation of **ntfy-client**.
 
 .. note::
 
