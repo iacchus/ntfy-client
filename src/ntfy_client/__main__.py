@@ -25,6 +25,15 @@ message_option = \
 title_option = \
         click.option("--title",
                      envvar="NTFY_DEFAULT_TITLE")
+priority_option = \
+        click.option("--priority",
+                     envvar="NTFY_PRIORITY")
+title_option = \
+        click.option("--tags",
+                     envvar="NTFY_TAGS")
+delay_option = \
+        click.option("--delay",
+                     envvar="NTFY_DELAY")
 @click.group
 def cli():
     pass
