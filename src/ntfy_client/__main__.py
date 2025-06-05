@@ -103,16 +103,19 @@ def cli():
 @cache_option
 @poll_id_option
 @content_type_option
-def pub():
+def pub(*args, **kwargs):
+    print("ARGS", args)
+    print("KWARGS", kwargs)
 
-    ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
-                            topic=NTFY_TOPIC,
-                            token=NTFY_TOKEN,
-                            args=args)
 
-    r = ntfy_client.pub()
-    response_data = json.dumps(r.json(), indent=2)
-    print("Response data:", response_data, sep="\n")
+    #  ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
+    #                          topic=NTFY_TOPIC,
+    #                          token=NTFY_TOKEN,
+    #                          args=args)
+    #
+    #  r = ntfy_client.pub()
+    #  response_data = json.dumps(r.json(), indent=2)
+    #  print("Response data:", response_data, sep="\n")
 
 if __name__ == "__main__":
 
