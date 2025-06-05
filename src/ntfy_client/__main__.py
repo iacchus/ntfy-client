@@ -5,11 +5,6 @@ import click
 
 from . import NTFYClient
 
-#  from . import NTFY_SERVER_HOSTNAME
-#  from . import NTFY_TOPIC
-#  from . import NTFY_TOKEN
-
-#  from . import args
 
 server_hostname_option = \
         click.option("--server-hostname",
@@ -107,14 +102,7 @@ def cli():
 @cache_option
 @poll_id_option
 @content_type_option
-def pub(server_hostname,
-        topic,
-        token,
-        *args, **kwargs):
-#  def pub(server_hostname=server_hostname,
-#          topic=topic,
-#          token=token,
-#          *args, **kwargs):
+def pub(server_hostname, topic, token, *args, **kwargs):
 
     args = types.SimpleNamespace(**kwargs)
     print("ARGS", args)
