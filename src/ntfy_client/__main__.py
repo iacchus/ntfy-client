@@ -1,7 +1,5 @@
-from abc import abstractstaticmethod
-from argparse import Action
 import json
-from ntpath import isjunction
+import types
 
 import click
 
@@ -37,17 +35,22 @@ tags_option = \
 delay_option = \
         click.option("--delay",
                      envvar="NTFY_DELAY")
+actions_option = \
+        click.option("--actions",
+                     envvar="NTFY_ACTIONS")
 click_option = \
         click.option("--click",
-                     envvar="NTFY_")
+                     envvar="NTFY_CLICK")
 markdown_option = \
         click.option("--markdown",
-                     envvar="NTFY_")
-action_option = \
-        click.option("--action",
-                     envvar="NTFY_")
+                     envvar="NTFY_MARKDOWN")
+icon_option = \
+        click.option("--icon",
+                     envvar="NTFY_ICON")
 file_option = \
         click.option("--file",
+                     type=str,
+                     default="",
                      envvar="NTFY_FILE")
 attach_option = \
         click.option("--attach",
@@ -57,7 +60,7 @@ firebase_option = \
                      envvar="NTFY_FIREBASE")
 unifiedpush_option = \
         click.option("--unifiedpush",
-                     envvar="NTFY_UNIFIEDBASE")
+                     envvar="NTFY_UNIFIEDPUSH")
 filename_option = \
         click.option("--filename",
                      envvar="NTFY_FILENAME")
@@ -90,9 +93,10 @@ def cli():
 @priority_option
 @tags_option
 @delay_option
+@actions_option
 @click_option
 @markdown_option
-@action_option
+@icon_option
 @file_option
 @attach_option
 @firebase_option
@@ -103,19 +107,28 @@ def cli():
 @cache_option
 @poll_id_option
 @content_type_option
-def pub(*args, **kwargs):
+def pub(server_hostname,
+        topic,
+        token,
+        *args, **kwargs):
+#  def pub(server_hostname=server_hostname,
+#          topic=topic,
+#          token=token,
+#          *args, **kwargs):
+
+    args = types.SimpleNamespace(**kwargs)
     print("ARGS", args)
     print("KWARGS", kwargs)
 
 
-    #  ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
-    #                          topic=NTFY_TOPIC,
-    #                          token=NTFY_TOKEN,
-    #                          args=args)
-    #
-    #  r = ntfy_client.pub()
-    #  response_data = json.dumps(r.json(), indent=2)
-    #  print("Response data:", response_data, sep="\n")
+    ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
+                            topic=NTFY_TOPIC,
+                            token=NTFY_TOKEN,
+                            args=args)
+
+    r = ntfy_client.pub()
+    response_data = json.dumps(r.json(), indent=2)
+    print("Response data:", response_data, sep="\n")
 
 if __name__ == "__main__":
 
