@@ -192,8 +192,8 @@ class NTFYClient:
                 }
 
         headers = {key: value for key, value in all_headers.items() if value}
-        print(all_headers)
-        print(headers)
+        print("all_headers", all_headers, end="\n\n")
+        print("headers", headers, end="\n\n")
 
         return headers
 
@@ -224,12 +224,3 @@ class NTFYClient:
 
         return authorization
 
-#  ntfycli = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
-#                                     topic=NTFY_TOPIC,
-#                                     token=NTFY_TOKEN,
-#                                     args=args)
-#
-#  r = ntfycli.pub()
-
-#  response_data = json.dumps(r.json(), indent=2)
-#  print("Response data:", response_data, sep="\n")

@@ -105,8 +105,8 @@ def cli():
 def pub(server_hostname, topic, token, *args, **kwargs):
 
     args = types.SimpleNamespace(**kwargs)
-    print("ARGS", args)
-    print("KWARGS", kwargs)
+    print("ARGS", args, end="\n\n")
+    print("KWARGS", kwargs, end="\n\n")
 
 
     ntfy_client = NTFYClient(hostname=server_hostname,
