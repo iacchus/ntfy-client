@@ -159,7 +159,8 @@ argument_parser.add_argument("-T", "--content-type",
                              help="Set the 'Content-Type' header manually",
                              default=None)
 
-args = argument_parser.parse_args()
+args = argument_parser.parse_args(sys.argv[2:])
+#  args = argument_parser.parse_args()
 
 MESSAGE_BODY = args.message
 
