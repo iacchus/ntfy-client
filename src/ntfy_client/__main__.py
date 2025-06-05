@@ -25,7 +25,8 @@ priority_option = \
         click.option("--priority",
                      envvar="NTFY_PRIORITY")
 tags_option = \
-        click.option("--tags",
+        click.option("--tags", "--tag",
+                     multiple=True,
                      envvar="NTFY_TAGS")
 delay_option = \
         click.option("--delay",
