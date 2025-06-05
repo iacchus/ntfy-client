@@ -5,11 +5,11 @@ import click
 
 from . import NTFYClient
 
-from . import NTFY_SERVER_HOSTNAME
-from . import NTFY_TOPIC
-from . import NTFY_TOKEN
+#  from . import NTFY_SERVER_HOSTNAME
+#  from . import NTFY_TOPIC
+#  from . import NTFY_TOKEN
 
-from . import args
+#  from . import args
 
 server_hostname_option = \
         click.option("--server-hostname",
@@ -121,9 +121,9 @@ def pub(server_hostname,
     print("KWARGS", kwargs)
 
 
-    ntfy_client = NTFYClient(hostname=NTFY_SERVER_HOSTNAME,
-                            topic=NTFY_TOPIC,
-                            token=NTFY_TOKEN,
+    ntfy_client = NTFYClient(hostname=server_hostname,
+                            topic=topic,
+                            token=token,
                             args=args)
 
     r = ntfy_client.pub()

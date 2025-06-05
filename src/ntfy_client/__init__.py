@@ -66,9 +66,9 @@ finally:
 # FIXME: check what is not constants anymore and write these in lowercase
 
 # let's prepend all environment variables with our namespace ("NTFY_", by now)
-NTFY_SERVER_HOSTNAME = os.environ.get('NTFY_SERVER_HOSTNAME')
-NTFY_TOPIC = os.environ.get('NTFY_TOPIC')
-NTFY_TOKEN = os.environ.get('NTFY_TOKEN')
+#  NTFY_SERVER_HOSTNAME = os.environ.get('NTFY_SERVER_HOSTNAME')
+#  NTFY_TOPIC = os.environ.get('NTFY_TOPIC')
+#  NTFY_TOKEN = os.environ.get('NTFY_TOKEN')
 #  NTFY_URL_HTTPS = os.environ.get('NTFY_URL_HTTPS')
 #  NTFY_URL_WSS = os.environ.get('NTFY_URL_WSS')
 
@@ -76,8 +76,8 @@ NTFY_TOKEN = os.environ.get('NTFY_TOKEN')
 
 #  NTFY_DEFAULT_=os.environ.get('NTFY_DEFAULT_', default=)  # COPYME!
 #  os.environ.get('NTFY_MESSAGE_BODY')
-DEFAULT_MESSAGE = os.environ.get('NTFY_DEFAULT_MESSAGE', default=sys.stdin)
-DEFAULT_TITLE = os.environ.get('NTFY_DEFAULT_TITLE', default="Sent via ntfy-cli")
+#  DEFAULT_MESSAGE = os.environ.get('NTFY_DEFAULT_MESSAGE', default=sys.stdin)
+#  DEFAULT_TITLE = os.environ.get('NTFY_DEFAULT_TITLE', default="Sent via ntfy-cli")
 #  DEFAULT_TITLE = os.environ.get('NTFY_DEFAULT_TITLE', default="Sent via ntfy-cli")
 
 #  NTFY_ICON = "https://public.kassius.org/python-logo.png"
@@ -90,9 +90,9 @@ ON_OFF = {"1", "0"}
 FILE_RECEIVED_MESSAGE = "You received a file: {file_name}"
 
 default_config_dict = {
-    "hostname":  NTFY_SERVER_HOSTNAME,
-    "topic": NTFY_TOPIC,
-    "token": NTFY_TOKEN,
+    #  "hostname":  NTFY_SERVER_HOSTNAME,
+    #  "topic": NTFY_TOPIC,
+    #  "token": NTFY_TOKEN,
 
     "title": "from ntfycli.py",
     "message": "defmsg",
@@ -115,54 +115,54 @@ default_config_dict = {
     "content_type": None
     }
 
-argument_parser = argparse.ArgumentParser(
-        prog=os.path.basename(sys.argv[0]),
-        description='Send ntfy notification',
-        epilog="https://github.com/iacchus/ntfy-cli"
-        )
-
-argument_parser.add_argument("-t", "--title", default=DEFAULT_TITLE)
-argument_parser.add_argument("-m", "--message", default=DEFAULT_MESSAGE)
-argument_parser.add_argument("-p", "--priority", choices=PRIORITIES)
-argument_parser.add_argument("-x", "--tags", "--tag", action="extend",
-                             nargs="+", type=str)
-argument_parser.add_argument("-d", "--delay", default=None)
-argument_parser.add_argument("-A", "--actions", "--action", action="extend",
-                             nargs="+", type=str)
-argument_parser.add_argument("-c", "--click", default=None)
-argument_parser.add_argument("-k", "--markdown", action="store_const",
-                             const="yes")
-argument_parser.add_argument("-i", "--icon", default=NTFY_ICON,
-                             help="Notification icon URL")
-# FIXME: this here:
-#  argument_parser.add_argument("-f", "--file", type=str,
-argument_parser.add_argument("-f", "--file", default="",
-                             help="Attach a local file")
-argument_parser.add_argument("-a", "--attach",
-                             help="Attach a file from an URL", default=None)
-argument_parser.add_argument("-b", "--firebase", default=None,
-                             choices=YES_NO, help="Use Firebase")
-argument_parser.add_argument("-u", "--unifiedpush", default=None,
-                             choices=YES_NO, help="Use UnifiedPush")
-argument_parser.add_argument("-F", "--filename",
-                             help="Send message as file with <filename>")
-argument_parser.add_argument("-E", "--email",
-                             help="Send message to <email>")
-argument_parser.add_argument("-V", "--call",
-                             help="Phone number for phone calls.")
-argument_parser.add_argument("-C", "--cache", choices=YES_NO, default=None,
-                             help="Use cache for messages")
-argument_parser.add_argument("-I", "--poll-id",
-                             help="Internal parameter, used for i*OS "
-                             "push notifications")
-argument_parser.add_argument("-T", "--content-type",
-                             help="Set the 'Content-Type' header manually",
-                             default=None)
-
-args = argument_parser.parse_args(sys.argv[2:])
-#  args = argument_parser.parse_args()
-
-MESSAGE_BODY = args.message
+#  argument_parser = argparse.ArgumentParser(
+#          prog=os.path.basename(sys.argv[0]),
+#          description='Send ntfy notification',
+#          epilog="https://github.com/iacchus/ntfy-cli"
+#          )
+#
+#  argument_parser.add_argument("-t", "--title", default=DEFAULT_TITLE)
+#  argument_parser.add_argument("-m", "--message", default=DEFAULT_MESSAGE)
+#  argument_parser.add_argument("-p", "--priority", choices=PRIORITIES)
+#  argument_parser.add_argument("-x", "--tags", "--tag", action="extend",
+#                               nargs="+", type=str)
+#  argument_parser.add_argument("-d", "--delay", default=None)
+#  argument_parser.add_argument("-A", "--actions", "--action", action="extend",
+#                               nargs="+", type=str)
+#  argument_parser.add_argument("-c", "--click", default=None)
+#  argument_parser.add_argument("-k", "--markdown", action="store_const",
+#                               const="yes")
+#  argument_parser.add_argument("-i", "--icon", default=NTFY_ICON,
+#                               help="Notification icon URL")
+#  # FIXME: this here:
+#  #  argument_parser.add_argument("-f", "--file", type=str,
+#  argument_parser.add_argument("-f", "--file", default="",
+#                               help="Attach a local file")
+#  argument_parser.add_argument("-a", "--attach",
+#                               help="Attach a file from an URL", default=None)
+#  argument_parser.add_argument("-b", "--firebase", default=None,
+#                               choices=YES_NO, help="Use Firebase")
+#  argument_parser.add_argument("-u", "--unifiedpush", default=None,
+#                               choices=YES_NO, help="Use UnifiedPush")
+#  argument_parser.add_argument("-F", "--filename",
+#                               help="Send message as file with <filename>")
+#  argument_parser.add_argument("-E", "--email",
+#                               help="Send message to <email>")
+#  argument_parser.add_argument("-V", "--call",
+#                               help="Phone number for phone calls.")
+#  argument_parser.add_argument("-C", "--cache", choices=YES_NO, default=None,
+#                               help="Use cache for messages")
+#  argument_parser.add_argument("-I", "--poll-id",
+#                               help="Internal parameter, used for i*OS "
+#                               "push notifications")
+#  argument_parser.add_argument("-T", "--content-type",
+#                               help="Set the 'Content-Type' header manually",
+#                               default=None)
+#
+#  args = argument_parser.parse_args(sys.argv[2:])
+#  #  args = argument_parser.parse_args()
+#
+#  MESSAGE_BODY = args.message
 
 
 # FIXME:
@@ -232,6 +232,7 @@ class NTFYClient:
         self.headers = self.make_headers(args)
 
     def pub(self, message=None):
+        # FIXME: message above
         file_path = pathlib.Path(self.args.file)
 
         if file_path.is_file():
@@ -242,11 +243,14 @@ class NTFYClient:
                 "X-tags": "gift",
                 "X-Filename": self.args.filename or file_path.name
                 })
-        elif args.file and not file_path.is_file():
+        elif self.args.file and not file_path.is_file():
             print(f"Error: file '{file_path.absolute()}' not found, exiting.")
             exit(1)
 
-        data = open(file_path.absolute(), "rb") if self.args.file else MESSAGE_BODY
+        data = open(file_path.absolute(), "rb") \
+                if self.args.file else self.args.message
+        #  data = open(file_path.absolute(), "rb") if self.args.file else MESSAGE_BODY
+
         response = requests.post(url=self.url_https,
                                  data=data,
                                  headers=self.headers)
