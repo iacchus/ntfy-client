@@ -20,7 +20,7 @@ topic_option = \
         click.option("--topic",
                      envvar="NTFY_TOPIC")
 token_option = \
-        click.option("--topic",
+        click.option("--token",
                      envvar="NTFY_TOKEN")
 message_option = \
         click.option("--message",
